@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { ethers } from "ethers";
 import { Row, Col, Card, Button } from "react-bootstrap";
+import { ipfs, ipfsSubdomain } from "../api/client";
+
 
 const Home = ({ marketplace, nft }) => {
   const [loading, setLoading] = useState(true);
@@ -14,9 +16,31 @@ const Home = ({ marketplace, nft }) => {
       if (!item.sold) {
         // get uri url from nft contract
         const uri = await nft.tokenURI(item.tokenId);
+        console.log("URI: ", uri)
+        const ipfsPath = uri.slice(0, uri.lastIndexOf("/") - 5);
+        const cid = uri.slice(uri.lastIndexOf("/") + 1);
+        const subdomain = "http://localhost:3000/"
+        // const modURI = await uri?.replace("ipfs.infura.io", "nft-ipfs-subdomain.infura-ipfs.io")
+        // const modURI = await uri?.replace("ipfs.io", "nft-ipfs-subdomain.infura-ipfs.io")
+        const modURI = await uri?.replace("ipfs.infura.io", "ipfs.io")
         // use uri to fetch the nft metadata stored on ipfs
-        const response = await fetch(uri);
-        const metadata = await response.json();
+        const response = await ipfsSubdomain.get(`/ipfs/${cid}`);
+
+
+        // const response = await fetch( modURI, {headers: {
+        //   authorization: auth,
+        //   // 'Access-Control-Allow-Origin': "*", 
+        //   // origin: 'http://localhost:3000/'
+          
+        // }});
+
+        console.log("Response: ", response)
+        // const metadata = await response.json();
+        const metadata = response?.data;
+        console.log("Response Metadata: ", metadata)
+        // const ipfsPath = uri.slice(0, uri.lastIndexOf("/") - 5);
+        // const cid = uri.slice(uri.lastIndexOf("/"));
+
         // get total price of item (item price + fee)
         const totalPrice = await marketplace.getTotalPrice(item.itemId);
         // Add item to items array

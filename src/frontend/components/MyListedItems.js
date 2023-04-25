@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { ethers } from "ethers"
 import { Row, Col, Card } from 'react-bootstrap'
 
+import { ipfsSubdomain } from '../api/client'
+
 function renderSoldItems(items) {
   return (
     <>
@@ -36,9 +38,14 @@ export default function MyListedItems({ marketplace, nft, account }) {
       if (i.seller.toLowerCase() === account) {
         // get uri url from nft contract
         const uri = await nft.tokenURI(i.tokenId)
+        
+        const cid = uri.slice(uri.lastIndexOf("/") + 1);
+        
         // use uri to fetch the nft metadata stored on ipfs 
-        const response = await fetch(uri)
-        const metadata = await response.json()
+        // const response = await fetch(uri)
+        const response = await ipfsSubdomain.get(`/ipfs/${cid}`);
+
+        const metadata = await response.data
         // get total price of item (item price + fee)
         const totalPrice = await marketplace.getTotalPrice(i.itemId)
         // define listed item object
@@ -59,14 +66,17 @@ export default function MyListedItems({ marketplace, nft, account }) {
     setListedItems(listedItems)
     setSoldItems(soldItems)
   }
+
   useEffect(() => {
     loadListedItems()
   }, [])
+
   if (loading) return (
     <main style={{ padding: "1rem 0" }}>
       <h2>Loading...</h2>
     </main>
   )
+
   return (
     <div className="flex justify-center">
       {listedItems.length > 0 ?
